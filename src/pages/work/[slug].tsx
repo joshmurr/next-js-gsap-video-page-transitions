@@ -1,9 +1,6 @@
 import { PROJECT_IDS } from "@/data/projects";
 import { InferGetStaticPropsType } from "next";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import { useTransitionState } from "@/context/TransitionContext";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Item } from "@/components/Item";
 import styled from "styled-components";
 
@@ -48,23 +45,11 @@ const Container = styled.div`
 `;
 
 export default function Work({ data }: Props) {
-  const { timeline } = useTransitionState();
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const itemRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      timeline.add(gsap.to(containerRef.current, { opacity: 0 }));
-    },
-    { scope: containerRef },
-  );
 
   return (
     <Container ref={containerRef}>
-      <Item ref={itemRef} bg={`#${data.id}`}>
-        {data.id}
-      </Item>
+      <Item bg={`#${data.id}`}>{data.id}</Item>
     </Container>
   );
 }

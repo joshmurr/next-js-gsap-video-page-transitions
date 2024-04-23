@@ -40,7 +40,6 @@ export const Carousel = ({ items }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(scrollRef);
 
-  const { timeline } = useTransitionState();
   const {
     state: { projectId },
   } = useGlobalState();
@@ -75,52 +74,20 @@ export const Carousel = ({ items }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useGSAP(
-    () => {
-      /* Entry animation */
-      const targets = gsap.utils.toArray(
-        itemRefs.current.map((ref) => ref.current),
-      );
-      gsap.fromTo(
-        targets,
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, stagger: 0.25 },
-      );
-    },
-    { scope: scrollRef },
-  );
-
-  useGSAP(
-    () => {
-      /* Exit animations */
-      const idx = Math.max(
-        0,
-        items.findIndex((item) => item === projectId),
-      );
-      const selectedRef = itemRefs.current[idx];
-      const targetsToExit = gsap.utils.toArray(
-        itemRefs.current
-          .filter((ref) => ref.current !== selectedRef.current)
-          .map((ref) => ref.current),
-      );
-
-      timeline.add(gsap.to(targetsToExit, { opacity: 0 }));
-    },
-    { dependencies: [projectId], scope: scrollRef },
-  );
-
   return (
     <Wrapper ref={scrollRef}>
       <Inner ref={containerRef}>
         {items.map((id, i) => (
           <Link key={i} href={`/work/${id}`} scroll={false}>
-            <Item
-              id={id}
-              bg={`#${id}`}
-              ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
-            >
-              {id}
-            </Item>
+            <LayoutTransition id={id}>
+              <Item
+                id={id}
+                bg={`#${id}`}
+                ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
+              >
+                {id}
+              </Item>
+            </LayoutTransition>
           </Link>
         ))}
       </Inner>

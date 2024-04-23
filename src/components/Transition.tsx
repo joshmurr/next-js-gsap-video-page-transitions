@@ -1,60 +1,43 @@
-import { useEffect, useState } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import ScrollToPlugin from "gsap/ScrollToPlugin";
-import Flip from "gsap/Flip";
-import { useTransitionState } from "@/context/TransitionContext";
-import styled from "styled-components";
-import { useGlobalState } from "@/context/GlobalContext";
-import { usePathname } from "next/navigation";
-gsap.registerPlugin(useGSAP, ScrollToPlugin, Flip);
-
-const HiddenWrapper = styled.div`
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-`;
+import { useContext } from "react";
+import { SwitchTransition, Transition } from "react-transition-group";
+import { useRouter } from "next/router";
+import gsap from "gsap/dist/gsap";
+import TransitionContext from "../context/TransitionContext";
 
 interface Props {
-  children: JSX.Element;
+  children: React.ReactNode;
 }
 
-export const TransitionLayout = ({ children: incomingChildren }: Props) => {
-  const [displayChildren, setDisplayChildren] = useState(incomingChildren);
-  const { timeline } = useTransitionState();
-  const { dispatch } = useGlobalState();
-  const { contextSafe } = useGSAP();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    dispatch({
-      type: "projectId",
-      value: pathname.split("/")[2],
-    });
-  }, [pathname, dispatch]);
-
-  const exit = contextSafe(() => {
-    timeline.play().then(() => {
-      window.scrollTo(0, 0);
-      setDisplayChildren(incomingChildren);
-      timeline.pause().clear();
-    });
-  });
-
-  useGSAP(() => {
-    if (incomingChildren.key !== displayChildren.key) {
-      exit();
-    }
-  }, [incomingChildren]);
-
+export const TransitionLayout = ({ children }: Props) => {
+  const router = useRouter();
+  const { toggleCompleted } = useContext(TransitionContext);
   return (
-    <>
-      {incomingChildren && <HiddenWrapper>{incomingChildren}</HiddenWrapper>}
-      <div>{displayChildren}</div>
-    </>
+    <SwitchTransition>
+      <Transition
+        key={router.pathname}
+        timeout={500}
+        onEnter={(node) => {
+          toggleCompleted(false);
+          gsap.set(node, { autoAlpha: 0, scale: 0.8, xPercent: -100 });
+          gsap
+            .timeline({
+              paused: true,
+              onComplete: () => toggleCompleted(true),
+            })
+            .to(node, { autoAlpha: 1, xPercent: 0, duration: 0.25 })
+            .to(node, { scale: 1, duration: 0.25 })
+            .play();
+        }}
+        onExit={(node) => {
+          gsap
+            .timeline({ paused: true })
+            .to(node, { scale: 0.8, duration: 0.2 })
+            .to(node, { xPercent: 100, autoAlpha: 0, duration: 0.2 })
+            .play();
+        }}
+      >
+        {children}
+      </Transition>
+    </SwitchTransition>
   );
 };
