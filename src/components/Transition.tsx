@@ -116,6 +116,7 @@ export const TransitionLayout = ({ children }: Props) => {
               })
               .to(entry, {
                 autoAlpha: 1,
+                duration: DURATION / 2,
               });
 
             let intervalId = setInterval(() => {
