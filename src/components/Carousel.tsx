@@ -6,6 +6,7 @@ import { useGSAP } from "@gsap/react";
 import { useGlobalState } from "@/context/GlobalContext";
 import { Item } from "./Item";
 import Link from "next/link";
+import { Title } from "./Title";
 
 const Wrapper = styled.div`
   display: flex;
@@ -85,7 +86,7 @@ export const Carousel = ({ items }: Props) => {
         {items.map((id, i) => (
           <ItemWrapper key={i}>
             <Link href={`/work/${id}`} scroll={false}>
-              <p data-morph-item={`layout-title-${id}`}>Title {id}</p>
+              <Title data-morph-item={`layout-title-${id}`}>Title {id}</Title>
               <Item
                 data-morph-item={`layout-${id}`}
                 bg={id}

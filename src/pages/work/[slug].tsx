@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Item } from "@/components/Item";
 import styled from "styled-components";
 import Link from "next/link";
+import { Title } from "@/components/Title";
 
 export async function getStaticPaths() {
   return {
@@ -37,38 +38,67 @@ export async function getStaticProps(context: { params: { slug: string } }) {
 
 interface Props extends InferGetStaticPropsType<typeof getStaticProps> {}
 
-const Container = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const PageWrapper = styled.main`
   width: 100%;
-  height: 100vh;
 `;
 
-const TranslatedItem = styled(Item)`
+const Container = styled.div`
+  width: 60%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const ItemWithMargin = styled(Item)`
   margin-top: 50px;
   margin-left: 50px;
 `;
 
-const Title = styled.p`
+const TitleWithMargin = styled(Title)`
   margin-bottom: 5em;
+`;
+
+const DummyContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 120vh;
+  background-color: grey;
 `;
 
 export default function Work({ data }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <Container ref={containerRef}>
-      <Link href={"/"} scroll={false}>
-        <Title data-morph-item={`layout-title-${data.id}`}>
-          Title {data.id}
-        </Title>
-      </Link>
-      <Link href={"/"} scroll={false}>
-        <TranslatedItem data-morph-item={`layout-${data.id}`} bg={data.id}>
-          {data.id}
-        </TranslatedItem>
-      </Link>
-    </Container>
+    <PageWrapper>
+      <Container ref={containerRef}>
+        <Link href={"/"} scroll={false}>
+          <TitleWithMargin data-morph-item={`layout-title-${data.id}`}>
+            Title {data.id}
+          </TitleWithMargin>
+          <ItemWithMargin data-morph-item={`layout-${data.id}`} bg={data.id}>
+            {data.id}
+          </ItemWithMargin>
+        </Link>
+
+        <DummyContent />
+
+        <Link href={`/work/${data.nextProject.id}`} scroll={false}>
+          <TitleWithMargin
+            data-morph-item={`layout-title-${data.nextProject.id}`}
+          >
+            Title {data.nextProject.id}
+          </TitleWithMargin>
+          <ItemWithMargin
+            data-morph-item={`layout-${data.nextProject.id}`}
+            bg={data.nextProject.id}
+          >
+            {data.id}
+          </ItemWithMargin>
+        </Link>
+      </Container>
+    </PageWrapper>
   );
 }

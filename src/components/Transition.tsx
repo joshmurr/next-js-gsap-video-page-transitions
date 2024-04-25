@@ -10,6 +10,9 @@ import { usePathname } from "next/navigation";
 gsap.registerPlugin(Flip, ScrollToPlugin);
 
 const DURATION = 1;
+gsap.defaults({
+  ease: "power2.inOut",
+});
 
 interface Props {
   children: React.ReactNode;
@@ -24,7 +27,7 @@ const Overlay = styled.div`
   pointer-events: none;
 `;
 
-const getPagePosition = (el: Element) => {
+const getPagePosition = (el: HTMLElement) => {
   const rect = el.getBoundingClientRect();
   return {
     x: rect.x,
@@ -32,20 +35,34 @@ const getPagePosition = (el: Element) => {
   };
 };
 
+const getMorphItems = (el: HTMLElement, id: string | null = null) => {
+  const selector = id ? `[data-morph-item=${id}]` : "[data-morph-item]";
+  return el.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+};
+
+const getMorphId = (el: HTMLElement) => {
+  return el.getAttribute("data-morph-item");
+};
+
+const idIn = (arr: (string | null)[]) => {
+  return (item: HTMLElement) => {
+    const id = getMorphId(item);
+    return arr.includes(id);
+  };
+};
+
 export const TransitionLayout = ({ children }: Props) => {
   const pathname = usePathname();
   const { toggleCompleted } = useTransitionState();
-
   const overlayRef = useRef<HTMLDivElement>(null);
   const exitComplete = useRef(false);
-
-  const morphItemsEnter = useRef<NodeList>();
+  const morphItemsEnter = useRef<NodeListOf<Element> | null>();
 
   return (
     <>
       <Overlay ref={overlayRef} />
       <SwitchTransition mode="in-out">
-        <Transition
+        <Transition<undefined>
           key={pathname}
           timeout={DURATION * 1000}
           onEnter={(entry) => {
@@ -53,26 +70,19 @@ export const TransitionLayout = ({ children }: Props) => {
             let morphComplete = false;
 
             gsap.set(entry, {
-              position: "absolute",
-              top: 0,
-              left: 0,
               autoAlpha: 0,
             });
 
-            const allPotentialMorphItem =
-              entry.querySelectorAll("[data-morph-item]");
-            morphItemsEnter.current = allPotentialMorphItem;
+            morphItemsEnter.current = getMorphItems(entry);
 
             const doMorph = () => {
               morphin = true;
-              const morphItems =
-                overlayRef.current.querySelectorAll("[data-morph-item]");
-              morphItems.forEach((morphEl) => {
+              if (!overlayRef.current) return;
+              const exitMorphItems = getMorphItems(overlayRef.current);
+              exitMorphItems.forEach((morphEl) => {
                 if (overlayRef.current) {
                   const targetMorphId = morphEl.dataset.morphItem;
-                  const targetEl = entry.querySelector(
-                    `[data-morph-item="${targetMorphId}"]`,
-                  );
+                  const targetEl = getMorphItems(entry, targetMorphId)[0];
                   Flip.fit(morphEl, targetEl, {
                     absolute: true,
                     duration: DURATION / 2,
@@ -90,9 +100,7 @@ export const TransitionLayout = ({ children }: Props) => {
                 onComplete: () => {
                   clearInterval(intervalId);
                   toggleCompleted(true);
-
                   exitComplete.current = false;
-
                   if (overlayRef.current) overlayRef.current.innerHTML = "";
                 },
               })
@@ -101,10 +109,12 @@ export const TransitionLayout = ({ children }: Props) => {
               });
 
             let intervalId = setInterval(() => {
-              /* Polling as useEffect style callbacks are not use here */
+              /* Polling as useEffect style callbacks are not use here
+               * Also putting doMorph in a timeline.call() is tricky as we
+               * can't get GSAP to time it or place a callback in the callback. */
               if (exitComplete.current) if (!morphin) doMorph();
               if (morphComplete) tl.play();
-            }, 30);
+            }, 10);
           }}
           onExit={(exit) => {
             gsap.set(exit, {
@@ -113,20 +123,14 @@ export const TransitionLayout = ({ children }: Props) => {
               left: 0,
             });
 
-            const enterIds = [...morphItemsEnter.current].map((item) => {
-              return item.getAttribute("data-morph-item") || "";
-            });
-            const __morphItems = [
-              ...exit.querySelectorAll("[data-morph-item]"),
-            ].filter((item) => {
-              const exitId = item.getAttribute("data-morph-item");
-              return enterIds.includes(exitId);
-            });
+            const enterIds = [...morphItemsEnter.current].map(getMorphId);
+            const exitMorphItems = [...getMorphItems(exit)].filter(
+              idIn(enterIds),
+            );
 
-            __morphItems.forEach((morphEl) => {
-              const clone = morphEl.cloneNode(true) as HTMLElement;
+            exitMorphItems.forEach((morphEl) => {
+              const clone = morphEl.cloneNode(true);
               gsap.set(clone, { margin: 0, padding: 0 });
-              // Flip.fit(clone, morphEl, { absolute: true, duration: 0 });
               const pagePosition = getPagePosition(morphEl);
               gsap.set(clone, {
                 position: "absolute",
