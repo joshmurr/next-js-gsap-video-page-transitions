@@ -1,4 +1,4 @@
-// import { TransitionLayout } from "@/components/Transition";
+import { TransitionLayout } from "@/components/Transition";
 import { GlobalStateProvider } from "@/context/GlobalContext";
 import { TransitionProvider } from "@/context/TransitionContext";
 import "@/styles/globals.css";
@@ -8,7 +8,9 @@ export default function App({ Component, pageProps, router }: AppProps) {
   return (
     <GlobalStateProvider>
       <TransitionProvider>
-        <Component key={router.route} {...pageProps} />
+        <TransitionLayout>
+          <Component key={router.route} {...pageProps} />
+        </TransitionLayout>
       </TransitionProvider>
     </GlobalStateProvider>
   );

@@ -1,19 +1,11 @@
 import styled from "styled-components";
-import NextLink from "next/link";
-import {
-  RefObject,
-  createRef,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from "react";
+import { RefObject, createRef, useLayoutEffect, useRef } from "react";
 import useHorizontalScroll from "@/hooks/useHorizontalScroll";
-import { useTransitionState } from "@/context/TransitionContext";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useGlobalState } from "@/context/GlobalContext";
 import { Item } from "./Item";
-import { LayoutTransition } from "./LayoutTransition";
+import Link from "next/link";
 
 const Wrapper = styled.div`
   display: flex;
@@ -30,7 +22,11 @@ const Inner = styled.div`
   align-items: start;
 `;
 
-const Link = styled(NextLink)``;
+const ItemWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
 
 interface Props {
   items: any[];
@@ -74,21 +70,31 @@ export const Carousel = ({ items }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useGSAP(
+    () => {
+      /* Intro anims */
+      const targets = gsap.utils.toArray(["[data-morph-item]"]);
+      gsap.fromTo(targets, { opacity: 0 }, { opacity: 1, stagger: 0.3 });
+    },
+    { scope: containerRef },
+  );
+
   return (
     <Wrapper ref={scrollRef}>
       <Inner ref={containerRef}>
         {items.map((id, i) => (
-          <Link key={i} href={`/work/${id}`} scroll={false}>
-            <LayoutTransition id={id}>
+          <ItemWrapper key={i}>
+            <Link href={`/work/${id}`} scroll={false}>
+              <p data-morph-item={`layout-title-${id}`}>Title {id}</p>
               <Item
-                id={id}
-                bg={`#${id}`}
+                data-morph-item={`layout-${id}`}
+                bg={id}
                 ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
               >
                 {id}
               </Item>
-            </LayoutTransition>
-          </Link>
+            </Link>
+          </ItemWrapper>
         ))}
       </Inner>
     </Wrapper>
