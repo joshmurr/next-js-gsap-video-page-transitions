@@ -12,6 +12,7 @@ gsap.registerPlugin(Flip, ScrollToPlugin);
 const DURATION = 1;
 gsap.defaults({
   ease: "power2.inOut",
+  duration: 0.1,
 });
 
 interface Props {
@@ -32,6 +33,8 @@ const getPagePosition = (el: HTMLElement) => {
   return {
     x: rect.x,
     y: rect.y,
+    width: rect.width,
+    height: rect.height,
   };
 };
 
@@ -51,12 +54,15 @@ const idIn = (arr: (string | null)[]) => {
   };
 };
 
+const isVideo = (el: HTMLElement) => el.nodeName === "VIDEO";
+
 export const TransitionLayout = ({ children }: Props) => {
   const pathname = usePathname();
   const { toggleCompleted } = useTransitionState();
   const overlayRef = useRef<HTMLDivElement>(null);
   const exitComplete = useRef(false);
   const morphItemsEnter = useRef<NodeListOf<Element> | null>();
+  const videoTimeRef = useRef(0);
 
   return (
     <>
@@ -80,17 +86,21 @@ export const TransitionLayout = ({ children }: Props) => {
               if (!overlayRef.current) return;
               const exitMorphItems = getMorphItems(overlayRef.current);
               exitMorphItems.forEach((morphEl) => {
-                if (overlayRef.current) {
-                  const targetMorphId = morphEl.dataset.morphItem;
-                  const targetEl = getMorphItems(entry, targetMorphId)[0];
-                  Flip.fit(morphEl, targetEl, {
-                    absolute: true,
-                    duration: DURATION / 2,
-                    onComplete: () => {
-                      morphComplete = true;
-                    },
-                  });
+                if (isVideo(morphEl)) {
+                  morphEl.currentTime = videoTimeRef.current;
+                  morphEl.play();
                 }
+                const targetMorphId = morphEl.dataset.morphItem;
+                const targetEl = getMorphItems(entry, targetMorphId)[0];
+                const scale = ["VIDEO"].includes(targetEl.nodeName);
+                Flip.fit(morphEl, targetEl, {
+                  absolute: true,
+                  scale,
+                  duration: DURATION / 2,
+                  onComplete: () => {
+                    morphComplete = true;
+                  },
+                });
               });
             };
 
@@ -129,13 +139,23 @@ export const TransitionLayout = ({ children }: Props) => {
             );
 
             exitMorphItems.forEach((morphEl) => {
-              const clone = morphEl.cloneNode(true);
-              gsap.set(clone, { margin: 0, padding: 0 });
+              let clone;
+              if (isVideo(morphEl)) {
+                morphEl.pause();
+                const currentTime = morphEl.currentTime;
+                videoTimeRef.current = currentTime;
+                clone = morphEl.cloneNode(true) as HTMLVideoElement;
+                clone.pause();
+                clone.currentTime = currentTime;
+              } else {
+                clone = morphEl.cloneNode(true);
+              }
+              // const clone = morphEl.cloneNode(true);
+              gsap.set(clone, { margin: 0 });
               const pagePosition = getPagePosition(morphEl);
               gsap.set(clone, {
                 position: "absolute",
-                top: pagePosition.y,
-                left: pagePosition.x,
+                ...pagePosition,
               });
               if (overlayRef.current) {
                 overlayRef.current.appendChild(clone);

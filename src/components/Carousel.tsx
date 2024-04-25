@@ -4,7 +4,7 @@ import useHorizontalScroll from "@/hooks/useHorizontalScroll";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useGlobalState } from "@/context/GlobalContext";
-import { Item } from "./Item";
+import { Video } from "./Video";
 import Link from "next/link";
 import { Title } from "./Title";
 
@@ -18,7 +18,7 @@ const Wrapper = styled.div`
 const Inner = styled.div`
   display: inline-grid;
   column-gap: 5vw;
-  padding: 0 calc(50vw - (var(--card-size) / 2));
+  padding: 0 calc(50vw - (var(--card-size-large) / 2));
   grid-auto-flow: column;
   align-items: start;
 `;
@@ -87,13 +87,12 @@ export const Carousel = ({ items }: Props) => {
           <ItemWrapper key={i}>
             <Link href={`/work/${id}`} scroll={false}>
               <Title data-morph-item={`layout-title-${id}`}>Title {id}</Title>
-              <Item
+              <Video
                 data-morph-item={`layout-${id}`}
-                bg={id}
                 ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
               >
                 {id}
-              </Item>
+              </Video>
             </Link>
           </ItemWrapper>
         ))}

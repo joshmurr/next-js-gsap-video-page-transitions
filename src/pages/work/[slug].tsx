@@ -1,7 +1,7 @@
 import { PROJECT_IDS } from "@/data/projects";
 import { InferGetStaticPropsType } from "next";
 import { useRef } from "react";
-import { Item } from "@/components/Item";
+import { Video } from "@/components/Video";
 import styled from "styled-components";
 import Link from "next/link";
 import { Title } from "@/components/Title";
@@ -50,9 +50,8 @@ const Container = styled.div`
   justify-content: center;
 `;
 
-const ItemWithMargin = styled(Item)`
-  margin-top: 50px;
-  margin-left: 50px;
+const ItemWithMargin = styled(Video)`
+  width: 100%;
 `;
 
 const TitleWithMargin = styled(Title)`
