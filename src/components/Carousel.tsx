@@ -1,18 +1,26 @@
 import styled from "styled-components";
-import { RefObject, createRef, useLayoutEffect, useRef } from "react";
+import {
+  RefObject,
+  createRef,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import useHorizontalScroll from "@/hooks/useHorizontalScroll";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useGlobalState } from "@/context/GlobalContext";
 import { Video } from "./Video";
 import Link from "next/link";
 import { Title } from "./Title";
+import { useTransitionState } from "@/context/TransitionContext";
 
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
   height: 100vh;
+  overflow-x: scroll;
+  overflow-y: hidden;
 `;
 
 const Inner = styled.div`
@@ -29,6 +37,10 @@ const ItemWrapper = styled.div`
   justify-content: center;
 `;
 
+const Btn = styled.button`
+  position: fixed;
+`;
+
 interface Props {
   items: any[];
 }
@@ -36,19 +48,22 @@ interface Props {
 export const Carousel = ({ items }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(scrollRef);
-
-  const {
-    state: { projectId },
-  } = useGlobalState();
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<RefObject<HTMLDivElement>[]>([]);
+  const firstLoadRef = useRef<boolean>(true);
+
+  const { previousRoute } = useTransitionState();
+  const previousProjectId = previousRoute?.startsWith("/work/")
+    ? previousRoute.split("/")[2]
+    : null;
 
   useLayoutEffect(() => {
-    const idx = Math.max(
-      0,
-      items.findIndex((item) => item === projectId),
-    );
-
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false;
+      return;
+    }
+    if (!previousProjectId) return;
+    const idx = items.findIndex((item) => item === previousProjectId);
     const targetElementRef = itemRefs.current[idx];
 
     if (scrollRef.current && targetElementRef.current) {
@@ -81,18 +96,19 @@ export const Carousel = ({ items }: Props) => {
   );
 
   return (
-    <Wrapper ref={scrollRef}>
+    <Wrapper ref={scrollRef} className="scroller">
       <Inner ref={containerRef}>
         {items.map((id, i) => (
-          <ItemWrapper key={i}>
+          <ItemWrapper
+            key={i}
+            ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
+            data-scroll-to={id === previousProjectId ? "true" : "false"}
+          >
             <Link href={`/work/${id}`} scroll={false}>
-              <Title data-morph-item={`layout-title-${id}`}>Title {id}</Title>
-              <Video
-                data-morph-item={`layout-${id}`}
-                ref={(itemRefs.current[i] = itemRefs.current[i] || createRef())}
-              >
-                {id}
-              </Video>
+              <Title data-morph-item={`layout-title-${id}`} color={id}>
+                Title {id}
+              </Title>
+              <Video data-morph-item={`layout-${id}`} />
             </Link>
           </ItemWrapper>
         ))}

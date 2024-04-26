@@ -1,45 +1,21 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useReducer,
-} from "react";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
-
-/* const xor = <T,>(arr: T[], val: T) => {
-  if (arr.includes(val)) return arr.filter((v) => v !== val);
-  return [...arr, val];
-}; */
+import React, { createContext, useContext, useReducer, useRef } from "react";
 
 type TransitionContextValue = {
   completed: boolean;
-  morphItems: string[];
   toggleCompleted: (value: boolean) => void;
-  addMorphItem: (value: string) => void;
-  clearMorphItems: () => void;
+  previousRoute: string | null;
 };
 
-type TransitionContextAction =
-  | {
-      type: "toggle";
-      value: boolean;
-    }
-  | {
-      type: "addMorphItem";
-      value: string;
-    }
-  | {
-      type: "clearMorphItems";
-    };
+type TransitionContextAction = {
+  type: "toggle";
+  value: boolean;
+};
 
 const initialState: TransitionContextValue = {
   completed: false,
-  morphItems: [],
   toggleCompleted: () => {},
-  addMorphItem: () => {},
-  clearMorphItems: () => {},
+  previousRoute: "blue",
 };
 
 const TransitionContext = createContext<TransitionContextValue>(initialState);
@@ -51,13 +27,6 @@ const reducer = (
   switch (action.type) {
     case "toggle":
       return { ...prevState, completed: action.value };
-    case "addMorphItem":
-      return {
-        ...prevState,
-        morphItems: [...prevState.morphItems, action.value],
-      };
-    case "clearMorphItems":
-      return { ...prevState, morphItems: [] };
     default:
       throw new Error();
   }
@@ -69,17 +38,18 @@ interface Props {
 
 const TransitionProvider = ({ children }: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const router = useRouter();
+  const routeRef = useRef<string | null>(null);
+
+  router.events?.on("routeChangeStart", () => {
+    routeRef.current = router.asPath;
+  });
 
   const value = {
     ...state,
+    previousRoute: routeRef.current,
     toggleCompleted: (value: boolean) => {
       dispatch({ type: "toggle", value });
-    },
-    addMorphItem: (value: string) => {
-      dispatch({ type: "addMorphItem", value });
-    },
-    clearMorphItems: () => {
-      dispatch({ type: "clearMorphItems" });
     },
   };
 

@@ -77,6 +77,9 @@ export const TransitionLayout = ({ children }: Props) => {
 
             gsap.set(entry, {
               autoAlpha: 0,
+              position: "absolute",
+              top: 0,
+              left: 0,
             });
 
             morphItemsEnter.current = getMorphItems(entry);
@@ -87,8 +90,10 @@ export const TransitionLayout = ({ children }: Props) => {
               const exitMorphItems = getMorphItems(overlayRef.current);
               exitMorphItems.forEach((morphEl) => {
                 if (isVideo(morphEl)) {
-                  morphEl.currentTime = videoTimeRef.current;
-                  morphEl.play();
+                  /* Is this better than red squigglies? Maybe. */
+                  (morphEl as HTMLVideoElement).currentTime =
+                    videoTimeRef.current;
+                  (morphEl as HTMLVideoElement).play();
                 }
                 const targetMorphId = morphEl.dataset.morphItem;
                 const targetEl = getMorphItems(entry, targetMorphId)[0];
@@ -117,6 +122,7 @@ export const TransitionLayout = ({ children }: Props) => {
               .to(entry, {
                 autoAlpha: 1,
                 duration: DURATION / 2,
+                position: "relative",
               });
 
             let intervalId = setInterval(() => {
@@ -128,12 +134,6 @@ export const TransitionLayout = ({ children }: Props) => {
             }, 10);
           }}
           onExit={(exit) => {
-            gsap.set(exit, {
-              position: "absolute",
-              top: 0,
-              left: 0,
-            });
-
             const enterIds = [...morphItemsEnter.current].map(getMorphId);
             const exitMorphItems = [...getMorphItems(exit)].filter(
               idIn(enterIds),
@@ -151,7 +151,6 @@ export const TransitionLayout = ({ children }: Props) => {
               } else {
                 clone = morphEl.cloneNode(true);
               }
-              // const clone = morphEl.cloneNode(true);
               gsap.set(clone, { margin: 0 });
               const pagePosition = getPagePosition(morphEl);
               gsap.set(clone, {
@@ -174,7 +173,7 @@ export const TransitionLayout = ({ children }: Props) => {
                 autoAlpha: 0,
                 duration: DURATION / 2,
               })
-              .set(window, { scrollTo: { x: 0, y: 0 } })
+              .set(window, { scrollTo: { y: 0 } })
               .play();
           }}
         >

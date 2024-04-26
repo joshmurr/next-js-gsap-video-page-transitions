@@ -50,7 +50,7 @@ const Container = styled.div`
   justify-content: center;
 `;
 
-const ItemWithMargin = styled(Video)`
+const FullwidthVideo = styled(Video)`
   width: 100%;
 `;
 
@@ -77,9 +77,7 @@ export default function Work({ data }: Props) {
           <TitleWithMargin data-morph-item={`layout-title-${data.id}`}>
             Title {data.id}
           </TitleWithMargin>
-          <ItemWithMargin data-morph-item={`layout-${data.id}`} bg={data.id}>
-            {data.id}
-          </ItemWithMargin>
+          <FullwidthVideo data-morph-item={`layout-${data.id}`} />
         </Link>
 
         <DummyContent />
@@ -90,12 +88,7 @@ export default function Work({ data }: Props) {
           >
             Title {data.nextProject.id}
           </TitleWithMargin>
-          <ItemWithMargin
-            data-morph-item={`layout-${data.nextProject.id}`}
-            bg={data.nextProject.id}
-          >
-            {data.id}
-          </ItemWithMargin>
+          <FullwidthVideo data-morph-item={`layout-${data.nextProject.id}`} />
         </Link>
       </Container>
     </PageWrapper>
